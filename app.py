@@ -13,16 +13,19 @@ class ShareService:
         self.default_mime = 'text/plain'
         self.default_encoding = 'utf-8'
 
+    def _get_blob_path(self, blob_id: str) -> str:
+        return self.storage.joinpath(blob_id)
+
     def read_blob(self, blob_id: str) -> bytes:
         try:
-            with open(self.storage.joinpath(blob_id), 'rb') as fd:
+            with open(self._get_blob_path(blob_id), 'rb') as fd:
                 return fd.read()
         except (FileNotFoundError, PermissionError, IsADirectoryError):
             return 
 
     def write_blob(self, blob_id: str, buffer: bytes) -> None:
         try:
-            with open(self.storage.joinpath(blob_id), 'wb') as fd:
+            with open(self._get_blob_path(blob_id), 'wb') as fd:
                 fd.write(buffer)
         except (PermissionError):
             return
