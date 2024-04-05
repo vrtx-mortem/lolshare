@@ -1,0 +1,55 @@
+# CLI stupidly simple sharing.
+# 
+# Does exactly what it seems. Support various formats.
+# Binary-friendly blobs.
+#
+# Depends on `curl' for http communication.
+# Depends on `scrot' for interactive screenshot.
+#
+# Put it in your shell:
+#    bash $ curl -Ss '__URL__' >> ~/.bashrc
+#    zsh  % curl -Ss '__URL__' >> ~/.zprofile
+
+function lolbin {
+  url="__URL__"
+
+  if [ -p /dev/stdin ]; then
+    arg="@-"
+  elif [ -f "$1" ]; then
+    arg="@$1"
+  else
+    return 1
+  fi
+
+  blob_id=$(curl -Ss "${url}" -F "file=${arg}")
+  blob_url="${url}${blob_id}"
+
+  command -v xclip 2>&1 >/dev/null && (echo -n "${blob_url}" | xclip -selection clipboard -in)
+  echo "${blob_url}"
+}
+
+function lolimg() {
+  url="__URL__"
+
+  if [ -p /dev/stdin ]; then
+    arg="@-"
+  elif [ -f "$1" ]; then
+    arg="@$1"
+  else
+    filepath=$(mktemp -u --suffix=.png)
+    scrot -F "${filepath}" -s #-e 'optipng $f'
+    arg="@${filepath}"
+  fi
+
+  blob_id=$(curl -Ss "${url}" -F "file=${arg}")
+  blob_url="${url}${blob_id}"
+  [[ -f "${filepath}" ]] && rm -f "${filepath}"
+
+  command -v xclip 2>&1 >/dev/null && (echo -n "${blob_url}" | xclip -selection clipboard -in)
+  echo "${blob_url}"
+}
+
+# Usage examples:
+#    $ lolbin /path/to/file
+#    $ cat /path/to/file | lolbin
+#    $ lolimg ## scrot selection
