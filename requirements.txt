@@ -1,1 +1,2 @@
+python-magic==0.4.27
 uWSGI==2.0.24

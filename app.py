@@ -4,6 +4,7 @@ import cgi
 import secrets
 import string
 import os
+import magic
 
 class ShareService:
     def __init__(self, environ, response):
@@ -41,21 +42,9 @@ class ShareService:
                 break
         return blob_id
 
-    # @TODO: make it adequate
-    def pseudo_mime(self, buffer: bytes) -> str:
-        mimes = {
-            'JPEG': 'image/jpeg',
-            'JFIF': 'image/jpeg',
-            'PNG' : 'image/png',
-            'GIF' : 'image/gif',
-            'AVIF':  'image/avif',
-            'webm':  'video/webm',
-        }
-
-        for key in mimes.keys():
-            if key.encode(self.default_encoding) in buffer[:32]:
-                return mimes[key]
-        return self.default_mime
+    def get_mime(self, buffer: bytes) -> str:
+        mimes = magic.Magic(mime = True)
+        return mimes.from_buffer(buffer)
 
     def get_user_blob(self) -> bytes:
         post_data = cgi.FieldStorage(
@@ -109,7 +98,7 @@ class ShareService:
         blob_id = self.environ.get('REQUEST_URI', '')
         blob_id = pathlib.Path(blob_id).name
         if buffer := self.read_blob(blob_id):
-            mime = self.pseudo_mime(buffer)
+            mime = self.get_mime(buffer)
             return self.ok(buffer, mime)
         return self.fail()
 
