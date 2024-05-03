@@ -44,7 +44,13 @@ class ShareService:
 
     def get_mime(self, buffer: bytes) -> str:
         mimes = magic.Magic(mime = True)
-        return mimes.from_buffer(buffer)
+        mime = mimes.from_buffer(buffer)
+        badies = ['octet-stream', 'text/']
+        for bad in badies:
+            if bad in mime:
+                mime = 'text/plain'
+                break
+        return mime
 
     def get_user_blob(self) -> bytes:
         post_data = cgi.FieldStorage(
